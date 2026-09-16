@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Making a Game Boy Emulator – Let’s Play Tetris — I Made A Thing</title><meta name="description" content="Dean Edis on building G33kBoy: CPU, graphics, memory and the pitfalls of getting Tetris running."><link rel="stylesheet" href="../../style.css"></head>
+<body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING<span>DEAN EDIS / DEANTHECODER</span></a><a href="https://github.com/deanthecoder/G33kBoy">G33kBoy on GitHub ↗</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">RETRO / DEVELOPMENT NOTES</p><h1>Making a Game Boy Emulator – Let’s Play Tetris</h1><p class="article-date"><time datetime="2025-11-18">18 November 2025</time> · Updated 4 January 2026</p><div class="article-content">
+<p class="wp-block-paragraph">Writing a Game Boy emulator is an absolute blast — until it suddenly isn’t.<br/>Tetris has a reputation for being “easy,” but it still threw me a few proper curveballs.</p>
+<p class="wp-block-paragraph">I have written a <a href="https://github.com/deanthecoder/ZXSpeculator">ZX Spectrum</a> emulator before, which was a good project to start from. It doesn’t need too many chips emulating, and the <a href="https://en.wikipedia.org/wiki/Zilog_Z80">Z80 CPU</a> is fairly straight-forward to implement.</p>
+<p class="wp-block-paragraph">Fancying another challenge, I picked the <a href="https://en.wikipedia.org/wiki/Game_Boy">Game Boy</a>.  It has a CPU partially based on the Z80, but also needs a PPU (graphics chip) and sound chip to emulate.</p>
+<p class="wp-block-paragraph">The first game I wanted to get working – <a href="https://en.wikipedia.org/wiki/Tetris">Tetris</a>.  This is apparently a popular goal, as a) it’s a good game, b) it’s classic, and c) it fits within 32KB so the ‘cartridge’ doesn’t need any fancy RAM bank switching implemented.</p>
+<p class="wp-block-paragraph">That said, I did have a few stumbling blocks.  To save others time, I’ve documented them…</p>
+<p class="wp-block-paragraph">All source code freely available here: <a href="https://github.com/deanthecoder/G33kBoy">https://github.com/deanthecoder/G33kBoy</a></p>
+<p class="wp-block-paragraph"><em>If you want the quick checklist, skip to the TL;DR at the end</em></p>
+<figure class="wp-block-image size-full is-resized"><img alt="Tetris intro screen" class="wp-image-264" decoding="async" loading="lazy" src="../../assets/articles/game-boy-tetris/image-1.png"/></figure>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="1--cartridge-rom-must-be-read-only-">1. 💾 Cartridge ROM <em>Must</em> Be Read-Only</h2>
+<h3 class="wp-block-heading" id="aka-tetris-will-cheerfully-eat-its-own-code">(aka: Tetris Will Cheerfully Eat Its Own Code)</h3>
+<p class="wp-block-paragraph">Tetris is a great first ROM because:</p>
+<ul class="wp-block-list">
+<li>it fits entirely into <strong>32KB</strong></li>
+<li>no MBC (bank controller)</li>
+<li>no bank switching</li>
+<li>predictable behaviour</li>
+</ul>
+<p class="wp-block-paragraph">Because it’s simple, it’s tempting to map the whole ROM into writable memory starting at address <code>0000</code>.<br/><strong>This isn’t the whole story.</strong></p>
+<p class="wp-block-paragraph">If your emulator allows writes to the cartridge region, Tetris will happily scribble over its own ROM during startup. The result:</p>
+<ul class="wp-block-list">
+<li>corrupted tiles</li>
+<li>broken backgrounds</li>
+<li>glitchy sprites</li>
+<li>behaviour that changes depending on timing</li>
+</ul>
+<p class="wp-block-paragraph">The confusing part is that <strong>VRAM looks correct</strong> when the game copies tiles… but the source ROM had already been damaged, so you end up copying garbage.</p>
+<p class="wp-block-paragraph">Fun fact: Games sometimes write to “read‑only” regions to detect hardware behaviour — so this isn’t as strange as it sounds.</p>
+<p class="wp-block-paragraph">How do you fix this? <strong>Just make any writes to the first 32KB of memory a no-op.</strong></p>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="2--joypad-register-ff00-matters-more-than-expected">2. 🎮 Joypad Register (FF00) Matters More Than Expected</h2>
+<p class="wp-block-paragraph">This one genuinely surprised me.</p>
+<p class="wp-block-paragraph">Tetris reads the joypad status almost immediately after boot.<br/>If your <code>FF00</code> (JOYP) implementation is even slightly wrong, you don’t get the copyright screen — What I saw:</p>
+<blockquote class="wp-block-quote is-layout-flow wp-block-quote-is-layout-flow">
+<p class="wp-block-paragraph"><strong>One flashing horizontal line forever.</strong></p>
+</blockquote>
+<p class="wp-block-paragraph">Very dull.</p>
+<ul class="wp-block-list">
+<li>Implement <code>FF00</code> as a proper readable register (See <a href="https://gbdev.io/pandocs/Joypad_Input.html">PanDocs</a>)</li>
+<li>Honour the “select buttons” and “select d‑pad” bits</li>
+</ul>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="3--oam--dma--what-they-are-and-why-you-need-them">3. 🚀 OAM &amp; DMA — What They Are and Why You Need Them</h2>
+<p class="wp-block-paragraph"><strong>OAM (Object Attribute Memory)</strong> lives at <code>FE00–FE9F</code>.<br/>It holds 40 sprite entries, each containing:</p>
+<ul class="wp-block-list">
+<li>X/Y position</li>
+<li>tile index</li>
+<li>palette/flip flags</li>
+</ul>
+<p class="wp-block-paragraph">Games update OAM constantly — if this region is wrong, sprites misbehave.</p>
+<p class="wp-block-paragraph"><strong>OAM DMA</strong> is triggered by writing any value to <code>FF46</code>.<br/>The hardware then copies 160 bytes from <code>&lt;value&gt; * 0x100</code> into OAM.</p>
+<p class="wp-block-paragraph">Tetris performs this DMA, so you must support it.</p>
+<p class="wp-block-paragraph">A minimal implementation is fine:</p>
+<ul class="wp-block-list">
+<li>copy 160 bytes from the chosen page</li>
+<li>during DMA, CPU can only access HRAM (but Tetris doesn’t rely on this)</li>
+</ul>
+<p class="wp-block-paragraph">Even a very simplified version works reliably for Tetris.</p>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="4--you-dont-need-a-fully-accurate-cpu-but-you-do-need-a-correct-one">4. 🧠 You Don’t Need a Fully Accurate CPU (But You Do Need a Correct One)</h2>
+<p class="wp-block-paragraph">When people say “Tetris breaks on opcode X,” the real culprit is often:</p>
+<ul class="wp-block-list">
+<li>a different instruction that sets flags incorrectly</li>
+<li>PC increment errors</li>
+<li>broken push/pop logic</li>
+<li>interrupt timing being slightly off</li>
+<li>EI/DI behaviour not matching hardware</li>
+</ul>
+<p class="wp-block-paragraph">If your CPU passes the <strong>Blargg tests</strong>, you’re in great shape.</p>
+<p class="wp-block-paragraph">There are many instructions Tetris doesn’t use (or at least, doesn’t use early on…).  I’d recommend running the ROM and adding each instruction your code reports to be ‘unimplemented’.</p>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="5--boot-rom-unmapping--dont-forget-this">5. 🔌 Boot ROM Unmapping — Don’t Forget This!</h2>
+<p class="wp-block-paragraph">On power‑on, the Game Boy maps a tiny <strong>boot ROM</strong> at <code>0000–00FF</code>.<br/>This code:</p>
+<ul class="wp-block-list">
+<li>scrolls the <strong>NINTENDO</strong> logo down the screen</li>
+<li>verifies the logo bytes stored in the cartridge</li>
+</ul>
+<p class="wp-block-paragraph">When the animation finishes, the CPU writes to <code>FF50</code>, which you need to ensure un-maps the boot ROM and reveals the actual cartridge beneath it.</p>
+<p class="wp-block-paragraph">If you forget this step:</p>
+<ul class="wp-block-list">
+<li>the logo comparison fails</li>
+<li>the game reads incorrect data</li>
+<li>Tetris won’t boot or displays corrupted graphics</li>
+</ul>
+<p class="wp-block-paragraph">This one is easy to miss.</p>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="6--pgm-output--the-simplest-possible-debug-image-format">6. 🖼️ PGM Output — The Simplest Possible Debug Image Format</h2>
+<p class="wp-block-paragraph">Before building a full UI, you can dump the framebuffer as a <a href="https://en.wikipedia.org/wiki/Netpbm#File_formats"><strong>PGM</strong> image</a>.  Not critical for Tetris, but handy utility code to have.</p>
+<p class="wp-block-paragraph">PGM is dead simple:</p>
+<pre class="wp-block-preformatted"><code>P2<br/>160 144<br/>255<br/>&lt;160*144 grayscale values&gt;</code></pre>
+<p class="wp-block-paragraph">It opens in GIMP, Photoshop, ImageMagick, and even some VS Code extensions.<br/>Perfect for debugging early PPU output.</p>
+<p class="wp-block-paragraph">I keep tiny PGM and TGA writers in my helper library:<br/><a href="https://github.com/deanthecoder/DTC.Core">https://github.com/deanthecoder/DTC.Core</a></p>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h2 class="wp-block-heading" id="7--capturing-blargg-test-output-through-a-fake-serial-port">7. 📡 Capturing Blargg Test Output Through a Fake Serial Port</h2>
+<p class="wp-block-paragraph">The legendary <a href="https://github.com/retrio/gb-test-roms"><strong>Blargg</strong> CPU tests</a> verify:</p>
+<ul class="wp-block-list">
+<li>arithmetic</li>
+<li>flags</li>
+<li>timing</li>
+<li>EI/DI behaviour</li>
+<li>stack correctness</li>
+<li>subtle edge cases</li>
+</ul>
+<p class="wp-block-paragraph">These tests output their results through:</p>
+<ul class="wp-block-list">
+<li><code>FF01</code> — SB (serial buffer)</li>
+<li><code>FF02</code> — SC (serial control)</li>
+</ul>
+<p class="wp-block-paragraph">You can write a tiny <code>SerialDevice</code> that:</p>
+<ul class="wp-block-list">
+<li>collects bytes written to SB</li>
+<li>appends them when SC triggers a transfer</li>
+<li>exposes the full output string</li>
+</ul>
+<p class="wp-block-paragraph">This lets you run Blargg CPU tests <strong>without a PPU</strong>, entirely through unit tests.</p>
+<pre class="wp-block-code"><code>/// &lt;summary&gt;
+/// Minimal bus to allow capturing of serial output, used by the Blargg tests when no PPU is implemented.
+/// &lt;/summary&gt;
+internal class SerialDevice : IMemDevice
+{
+    public ushort FromAddr =&gt; 0xFF01;
+    public ushort ToAddr =&gt; 0xFF02;
+
+    /// &lt;summary&gt;
+    /// Transfer data, Serial Control.
+    /// &lt;/summary&gt;
+    private readonly byte[] m_data = new byte[2];
+
+    private readonly StringBuilder m_output = new StringBuilder();
+        
+    public string Output =&gt; m_output.ToString();
+        
+    public byte Read8(ushort addr) =&gt; 0x00;
+
+    public void Write8(ushort addr, byte value)
+    {
+        switch (addr)
+        {
+            case 0xFF01:
+                // Transfer data.
+                m_data[0] = value;
+                return;
+            case 0xFF02:
+                // Serial Control.
+                m_output.Append((char)m_data[0]);
+                m_data[1] = 0x01;
+                break;
+        }
+    }
+}</code></pre>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h1 class="wp-block-heading" id="-tldr--how-to-get-tetris-running">⚡ <strong>TL;DR — How to Get Tetris Running</strong></h1>
+<p class="wp-block-paragraph">You only need part of the system working:</p>
+<h3 class="wp-block-heading" id="-cpu">✔ <strong>CPU</strong></h3>
+<ul class="wp-block-list">
+<li>Must pass the <strong>individual blargg tests</strong></li>
+<li>Correct EI behaviour, DAA, flags, signed ops</li>
+<li>HALT not fully required</li>
+<li>STOP not needed</li>
+</ul>
+<h3 class="wp-block-heading" id="-memory">✔ <strong>Memory</strong></h3>
+<ul class="wp-block-list">
+<li>Cartridge ROM <strong>must be read-only</strong></li>
+<li>Boot ROM mapped at <code>0000–00FF</code> until <code>FF50</code> write</li>
+<li>No MBC/bank switching required</li>
+</ul>
+<h3 class="wp-block-heading" id="-joypad-ff00">✔ <strong>Joypad (FF00)</strong></h3>
+<ul class="wp-block-list">
+<li>Must honour select bits</li>
+<li>Must not default to zero</li>
+<li>Interrupts optional</li>
+</ul>
+<h3 class="wp-block-heading" id="-dma">✔ <strong>DMA</strong></h3>
+<ul class="wp-block-list">
+<li>Implement OAM DMA (<code>FF46</code>)</li>
+<li>Simple “copy immediately” version works</li>
+</ul>
+<h3 class="wp-block-heading" id="-ppu">✔ <strong>PPU</strong></h3>
+<p class="wp-block-paragraph">You don’t need cycle accuracy.<br/>Just enough to draw:</p>
+<ul class="wp-block-list">
+<li>background tiles</li>
+<li>basic sprites</li>
+<li>VBlank interrupt</li>
+</ul>
+<p class="wp-block-paragraph">Use PGM output and the <a href="https://github.com/mattcurrie/dmg-acid2">Acid2 test ROM</a> to confirm correctness.</p>
+<h3 class="wp-block-heading" id="-testing-workflow">✔ <strong>Testing Workflow</strong></h3>
+<ul class="wp-block-list">
+<li>Run blargg tests via fake serial device</li>
+<li>Use Acid2 for PPU validation</li>
+</ul>
+<h3 class="wp-block-heading" id="-common-pitfalls">✔ <strong>Common Pitfalls</strong></h3>
+<ul class="wp-block-list">
+<li>forgetting to unmap boot ROM</li>
+<li>allowing writes to ROM</li>
+<li>incorrect flags</li>
+<li>wrong joypad behaviour</li>
+</ul>
+<hr class="wp-block-separator has-alpha-channel-opacity"/>
+<h1 class="wp-block-heading" id="-useful-links">🔗 Useful Links</h1>
+<ul class="wp-block-list">
+<li><strong>My G33kBoy Emulator:</strong><br/><a href="https://github.com/deanthecoder/G33kBoy">https://github.com/deanthecoder/G33kBoy</a></li>
+<li><strong>DTC.Core Utilities:</strong><br/><a href="https://github.com/deanthecoder/DTC.Core">https://github.com/deanthecoder/DTC.Core</a></li>
+<li><strong>Pan Docs:</strong><br/><a href="https://gbdev.io/pandocs/">https://gbdev.io/pandocs/</a></li>
+<li><strong>Acid2 PPU Test:</strong><br/><a href="https://github.com/mattcurrie/gb-test-roms/tree/master/acid2">https://github.com/mattcurrie/gb-test-roms/tree/master/acid2</a></li>
+<li><strong>blargg CPU Tests:</strong><br/><a href="https://github.com/retrio/gb-test-roms">https://github.com/retrio/gb-test-roms</a></li>
+</ul>
+</div></article></main><footer>DEAN EDIS · I MADE A THING</footer></body></html>
