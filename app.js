@@ -4,7 +4,7 @@ let carouselFrame=0, carouselOffset=0, featuredTimer, userChose=false;
 function cancelFeatured(){userChose=true;clearTimeout(featuredTimer)}
 function stopCarousel(){cancelAnimationFrame(carouselFrame);carouselFrame=0}
 const filtered=()=>items.filter(x=>category!==null&&(category==='All'||(category==='Featured'?x.featured:x.category===category)));
-items.forEach(item=>{const card=document.createElement('button');card.className='card';card.dataset.id=item.id;card.innerHTML=`<div class="visual ${item.art}">${item.visual}<span class="kind">${item.category==='Articles'?'DEV NOTE':item.category.toUpperCase()}</span></div><div class="card-body"><h2>${item.title}</h2><p>${item.description}</p><span class="open-label">${item.category==='Articles'?'Read the note':'Explore project'} &nbsp; ↗</span></div>`;card.addEventListener('click',()=>{if(suppressClick)return;cancelFeatured();const i=filtered().findIndex(x=>x.id===item.id);if(i<0){stopCarousel();carouselOffset=0;category=item.category;index=filtered().findIndex(x=>x.id===item.id);resetSceneryDrift();render(true);return}if(i===index){location.hash=item.id;}else{let delta=i-index;const count=filtered().length;if(delta>count/2)delta-=count;if(delta<-count/2)delta+=count;move(delta)}});cards.append(card)});
+items.forEach(item=>{const card=document.createElement('button');card.className='card';card.dataset.id=item.id;card.innerHTML=`<div class="visual ${item.art}">${item.visual}<span class="kind">${item.category==='Articles'?'DEV NOTE':item.category.toUpperCase()}</span></div><div class="card-body"><h2>${item.title}</h2><p>${item.description}</p><span class="open-label">${item.externalUrl?'View shader':item.category==='Articles'?'Read the note':'Explore project'} &nbsp; ↗</span></div>`;card.addEventListener('click',()=>{if(suppressClick)return;cancelFeatured();const i=filtered().findIndex(x=>x.id===item.id);if(i<0){stopCarousel();carouselOffset=0;category=item.category;index=filtered().findIndex(x=>x.id===item.id);resetSceneryDrift();render(true);return}if(i===index){location.hash=item.id;}else{let delta=i-index;const count=filtered().length;if(delta>count/2)delta-=count;if(delta<-count/2)delta+=count;move(delta)}});cards.append(card)});
 // Card images belong to the carousel gesture, not the browser's image drag.
 cards.querySelectorAll('img').forEach(image=>{image.draggable=false});
 cards.addEventListener('dragstart',event=>event.preventDefault());
@@ -42,7 +42,7 @@ function render(stagger=false, dragPosition=carouselOffset){
   card.tabIndex=distant||i===index?0:-1;
   card.inert=!distant&&fade===0;
   card.style.pointerEvents=!distant&&fade===0?'none':'auto';
-  card.setAttribute('aria-label',`${items[slot].title}${i===index&&!distant?', open reading view':', bring to front'}`);
+  card.setAttribute('aria-label',`${items[slot].title}${i===index&&!distant?(items[slot].externalUrl?', open shader project':', open reading view'):', bring to front'}`);
  });
  document.querySelector('#position').textContent=list.length?`${String(index+1).padStart(2,'0')} / ${String(list.length).padStart(2,'0')}`:'Choose a category or a card to explore';
  document.querySelectorAll('#previous,#next').forEach(b=>{b.disabled=list.length<2;b.style.visibility=list.length<2?'hidden':'visible'});
@@ -116,10 +116,17 @@ async function route(){
  if(!reader.open){returnFocus=document.activeElement;reader.showModal();document.body.classList.add('reading')}
  reader.scrollTop=0;
  if(item.body){
-  article.innerHTML=`<p class="eyebrow">${item.category.toUpperCase()} / DEANTHECODER</p><h2>${item.title}</h2><p class="article-date"><time datetime="${item.date}">${item.date}</time></p><div class="article-content">${item.body}</div>`;
-  const permalink=document.createElement('a');
-  permalink.href=item.url;permalink.textContent='Open standalone article ↗';
-  article.append(permalink);return;
+  const date=item.date?`<p class="article-date"><time datetime="${item.date}">${item.date}</time></p>`:'';
+  article.innerHTML=`<p class="eyebrow">${item.category.toUpperCase()} / DEANTHECODER</p><h2>${item.title}</h2>${date}<div class="article-content">${item.body}</div>`;
+  const destination=item.externalUrl||item.url;
+  if(destination){
+   const permalink=document.createElement('a');permalink.href=destination;
+   permalink.textContent=item.externalUrl?'Open on Shadertoy ↗':'Open standalone article ↗';
+   if(item.externalUrl){permalink.target='_blank';permalink.rel='noopener'}
+   if(item.externalUrl)article.querySelector('.article-content').before(permalink);
+   else article.append(permalink);
+  }
+  return;
  }
  if(!item.url){
   article.innerHTML=`<p class="eyebrow">${item.category.toUpperCase()} / DEANTHECODER</p><h2>${item.title}</h2><p>${item.description}</p>${item.body}${item.category!=='Articles'?'<a href="https://github.com/DeanTheCoder" target="_blank" rel="noopener">Explore DeanTheCoder on GitHub ↗</a>':''}`;
@@ -161,7 +168,7 @@ items.forEach(item => {
  const link = document.createElement('a');
  link.className = 'overview-card';
  link.href = '#' + item.id;
- link.innerHTML = `<div class="visual ${item.art}">${item.visual}</div><h3>${item.title}</h3><p>${item.description}</p>${item.url ? '<span>Read the article ↗</span>' : '<span>Prototype preview</span>'}`;
+ link.innerHTML = `<div class="visual ${item.art}">${item.visual}</div><h3>${item.title}</h3><p>${item.description}</p>${item.externalUrl?'<span>Open shader project ↗</span>':item.url?'<span>Read the article ↗</span>':'<span>Prototype preview</span>'}`;
  overview.append(link);
 });
 
