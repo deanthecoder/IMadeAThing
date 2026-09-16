@@ -11,14 +11,14 @@ cards.addEventListener('dragstart',event=>event.preventDefault());
 function render(stagger=false, dragPosition=carouselOffset){
  const list=filtered();
  const fieldWidth=cards.clientWidth,fieldHeight=cards.clientHeight;
- const columns=Math.min(items.length,innerWidth<=760?2:Math.max(3,Math.min(6,Math.ceil(Math.sqrt(items.length*1.5)))));
- const rows=Math.ceil(Math.min(items.length,8)/columns);
+ const columns=Math.min(items.length,innerWidth<=480?6:innerWidth<=760?7:Math.max(8,Math.min(11,Math.ceil(Math.sqrt(items.length*1.8)))));
+ const rows=Math.ceil(items.length/columns);
  const cellWidth=(fieldWidth-36)/columns,cellHeight=(fieldHeight-28)/rows;
  document.querySelectorAll('.card').forEach((card,slot)=>{
   const i=list.findIndex(x=>x.id===card.dataset.id), distant=i<0;
   let offset=i-index+dragPosition;
   if(list.length>5)offset=((offset+list.length/2)%list.length+list.length)%list.length-list.length/2;
-  card.hidden=distant&&slot>=8;
+  card.hidden=false;
   card.classList.toggle('distant',distant);
   card.classList.toggle('active',!distant&&i===index);
   const row=Math.floor(slot/columns),column=slot%columns;
