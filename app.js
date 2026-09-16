@@ -115,6 +115,12 @@ async function route(){
  }
  if(!reader.open){returnFocus=document.activeElement;reader.showModal();document.body.classList.add('reading')}
  reader.scrollTop=0;
+ if(item.body){
+  article.innerHTML=`<p class="eyebrow">${item.category.toUpperCase()} / DEANTHECODER</p><h2>${item.title}</h2><p class="article-date"><time datetime="${item.date}">${item.date}</time></p><div class="article-content">${item.body}</div>`;
+  const permalink=document.createElement('a');
+  permalink.href=item.url;permalink.textContent='Open standalone article ↗';
+  article.append(permalink);return;
+ }
  if(!item.url){
   article.innerHTML=`<p class="eyebrow">${item.category.toUpperCase()} / DEANTHECODER</p><h2>${item.title}</h2><p>${item.description}</p>${item.body}${item.category!=='Articles'?'<a href="https://github.com/DeanTheCoder" target="_blank" rel="noopener">Explore DeanTheCoder on GitHub ↗</a>':''}`;
   return;

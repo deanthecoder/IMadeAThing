@@ -4,7 +4,11 @@ from pathlib import Path
 from urllib.parse import urlsplit,unquote
 from bs4 import BeautifulSoup
 root=Path(__file__).resolve().parents[1];z=zipfile.ZipFile(sys.argv[1]);prefix='imadeathing-backup-2026-09-10/data/'
-posts=json.loads(z.read(prefix+'posts.json'))+json.loads(z.read(prefix+'pages.json'))
+posts=json.loads(z.read(prefix+'posts.json'))
+items=json.loads((root/'content/articles.json').read_text())
+assert len(items)==len(posts)
+assert all(item.get('body') for item in items),'Every article must have a bundled body for file:// reading'
+assert all(item.get('category')!='About' for item in items),'The old About page must remain omitted'
 for p in posts:
  slug='game-boy-tetris' if p['id']==260 else p['slug']
  original=BeautifulSoup(p['content']['rendered'],'html.parser')
@@ -19,8 +23,9 @@ for p in root.rglob('*.html'):
  for n in soup.select('[src], [href]'):
   for key in ['src','href']:
    u=urlsplit(n.get(key,''))
+   assert u.hostname not in ['imadeathing.co.uk','www.imadeathing.co.uk'],(p,n.get(key))
    if u.scheme or u.netloc or not u.path:continue
    assert (p.parent/unquote(u.path)).exists(),(p,n.get(key))
    checked+=1
  assert not soup.select('[onload],[onclick]'),p
-print(f'Passed: {len(posts)} articles preserve original text; {checked} local references resolve.')
+print(f'Passed: {len(posts)} bundled articles preserve original text; {checked} local references resolve; no user-facing links use the old domain.')

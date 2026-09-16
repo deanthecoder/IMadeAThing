@@ -7,13 +7,13 @@ from bs4 import BeautifulSoup
 root=Path(__file__).resolve().parents[1]
 z=zipfile.ZipFile(sys.argv[1]);prefix='imadeathing-backup-2026-09-10/'
 read=lambda name:json.loads(z.read(prefix+'data/'+name+'.json'))
-posts=read('posts');pages=read('pages');media={x['id']:x for x in read('media')};cats={x['id']:x['name'] for x in read('categories')}
+posts=read('posts');media={x['id']:x for x in read('media')};cats={x['id']:x['name'] for x in read('categories')}
 manifest=json.loads(z.read(prefix+'manifest.json'))['files'];issues=[];embeds=[];items=[]
 def canon(u):
  return re.sub(r'https?://axela.temp.domains/~imadeathing/?','https://imadeathing.co.uk/',html.unescape(u)).replace('http://imadeathing.co.uk/','https://imadeathing.co.uk/')
 def slug(p):return 'game-boy-tetris' if p['id']==260 else p['slug']
-routes={canon(p['link']).rstrip('/'):'articles/'+slug(p)+'/index.html' for p in posts+pages}
-byid={str(p['id']):'articles/'+slug(p)+'/index.html' for p in posts+pages}
+routes={canon(p['link']).rstrip('/'):'articles/'+slug(p)+'/index.html' for p in posts}
+byid={str(p['id']):'articles/'+slug(p)+'/index.html' for p in posts}
 assets={}
 def asset(u):
  u=canon(u);name=manifest.get(u)
@@ -45,7 +45,7 @@ def youtube_thumbnail(video_id):
  return None
 for m in media.values():
  asset(m['source_url'])
-for p in posts+pages:
+for p in posts:
  title=html.unescape(p['title']['rendered']);page='articles/'+slug(p)+'/index.html';soup=BeautifulSoup(p['content']['rendered'],'html.parser')
  original=BeautifulSoup(p['content']['rendered'],'html.parser')
  video_preview=None
@@ -84,6 +84,8 @@ for p in posts+pages:
    if path:node[key]=relative(path,page)+('#'+parts.fragment if parts.fragment else '');continue
    saved=assets.get(url) or (asset(url) if '/wp-content/uploads/' in url or key in ['src','poster'] else None)
    if saved:node[key]=relative(saved,page)
+   elif parts.hostname in ['imadeathing.co.uk','www.imadeathing.co.uk']:
+    node[key]=relative('index.html',page)+('#'+parts.fragment if parts.fragment else '')
    else:
     node[key]=url
     if key in ['src','poster']:
@@ -96,8 +98,11 @@ for p in posts+pages:
    # Fix source dimensions without distorting the image on small screens.
    node.attrs.pop('width',None);node.attrs.pop('height',None)
  names=[cats[i] for i in p.get('categories',[])]
- category='Tools' if 'Shader Shrinker' in title else 'Retro' if 'Emulation' in names else 'Shaders' if 'GLSL Shader Coding' in names else 'Hardware'
- if p in pages:category='About'
+ category=('Tools' if 'Shader Shrinker' in title else
+           'Emulation' if 'Emulation' in names else
+           'Shaders' if 'GLSL Shader Coding' in names else
+           'Arduino' if names==['Arduino Coding'] else
+           'Builds')
  text=original.get_text(' ',strip=True)
  excerpt=BeautifulSoup(p.get('excerpt',{}).get('rendered',''),'html.parser').get_text(' ',strip=True)
  excerpt=re.sub(r'\s*\[.*?\]\s*$','',excerpt).strip() or text
@@ -108,7 +113,13 @@ for p in posts+pages:
  saved=asset(pic) if pic else None
  saved=saved or video_preview
  visual=f'<img src="{html.escape(saved)}" alt="{html.escape(title,quote=True)}" loading="lazy" draggable="false">' if saved else f'<span class="text-preview">{html.escape(category)}<b>{html.escape(title)}</b></span>'
- item={'id':'g33kboy' if p['id']==260 else slug(p),'title':title,'category':category,'description':desc,'art':'archive-art','visual':visual,'url':page,'featured':p['id'] in [260,247,213,194,151,9],'date':p['date'][:10]}
+ modal=BeautifulSoup(str(soup),'html.parser')
+ for node in modal.find_all(True):
+  for key in ['src','href','poster']:
+   value=node.get(key)
+   if not value or value.startswith(('#','data:','mailto:')) or urlsplit(value).scheme:continue
+   node[key]=os.path.normpath(os.path.join(os.path.dirname(page),value))
+ item={'id':'g33kboy' if p['id']==260 else slug(p),'title':title,'category':category,'description':desc,'art':'archive-art','visual':visual,'url':page,'featured':p['id'] in [260,247,213,194,151,9],'date':p['date'][:10],'body':str(modal)}
  items.append(item)
  out=root/page;out.parent.mkdir(parents=True,exist_ok=True)
  out.write_text(f'''<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>{html.escape(title)} — I Made A Thing</title><meta name="description" content="{html.escape(desc,quote=True)}"><link rel="stylesheet" href="../../style.css"></head><body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">{category.upper()}</p><h1>{html.escape(title)}</h1><p class="article-date"><time datetime="{p['date'][:10]}">{p['date'][:10]}</time> · Updated {p['modified'][:10]}</p><div class="article-content">{soup}</div></article></main></body></html>''')
@@ -119,5 +130,5 @@ for p in posts+pages:
 (root/'content/articles.json').write_text(json.dumps(items,ensure_ascii=False,indent=2)+'\n')
 (root/'content.js').write_text('const items = '+json.dumps(items,ensure_ascii=False,indent=2)+';\n')
 (root/'content/url-map.json').write_text(json.dumps(routes,indent=2)+'\n')
-(root/'content/import-report.json').write_text(json.dumps({'posts':len(posts),'pages':len(pages),'savedAssets':len(assets),'externalEmbeds':embeds,'missingAssets':issues},indent=2)+'\n')
-print('Imported',len(posts),'posts and',len(pages),'pages;',len(assets),'assets;',len(issues),'unavailable assets;',len(embeds),'external embeds')
+(root/'content/import-report.json').write_text(json.dumps({'posts':len(posts),'pages':0,'savedAssets':len(assets),'externalEmbeds':embeds,'missingAssets':issues},indent=2)+'\n')
+print('Imported',len(posts),'posts;',len(assets),'assets;',len(issues),'unavailable assets;',len(embeds),'external embeds')
