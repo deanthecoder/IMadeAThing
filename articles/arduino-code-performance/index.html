@@ -1,0 +1,50 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arduino Code – Performance — I Made A Thing</title><meta name="description" content="I’m currently making a self balancing robot, powered by an Arduino Nano, and decided to use NEMA 17 stepper motors to power it. The DRV8825…"><link rel="stylesheet" href="../../style.css"></head><body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">HARDWARE</p><h1>Arduino Code – Performance</h1><p class="article-date"><time datetime="2019-04-09">2019-04-09</time> · Updated 2019-04-09</p><div class="article-content">
+<p class="wp-block-paragraph">I’m currently making a self balancing robot, powered by an <a href="https://www.theengineeringprojects.com/2018/06/introduction-to-arduino-nano.html">Arduino Nano</a>, and decided to use <a href="https://reprap.org/wiki/NEMA_17_Stepper_motor">NEMA 17</a> stepper motors to power it.</p>
+<p class="wp-block-paragraph">The <a href="https://www.instructables.com/id/Controll-a-Stepper-Motor-With-the-DRV8825/">DRV8825</a> motor drivers are great, but cannot be driven using a <a href="http://Arduino - PWM https://www.arduino.cc/en/tutorial/PWM">PWM</a> signal.  Consequently the Arduino code must send a ‘step’ signal to the correct pin many times per second – Easily in the thousands if you require a decent amount of speed, especially if you’re micro-stepping.</p>
+<p class="wp-block-paragraph">Performance is critical…</p>
+<!--more-->
+<p class="wp-block-paragraph">To make the stepper rotate one full turn requires it to step 200 times. In my case I’m using a micro-step level of ‘8’, meaning I actually have to send 1,600 ‘steps’ (2 * 800) signals to the DRV8825 input pin.  So to get a speed of 2 revolutions per second that’s actually 3,200 steps per second!  Getting this sort of speed (combined with code to calculate motor acceleration, the angle of the robot, etc) is no simple feat!</p>
+<p class="wp-block-paragraph">To achieve the best code performance you need to really analyse how long each loop cycle takes, trimming down unnecessary calculations as far as possible.  You may or may not know that different types of calculation take different amounts of time.  For example, multiplying two <code>int</code>s is faster than multiplying two <code>double</code>s, and any sort of ‘divide’ operations is significantly slower again – See below!</p>
+<p class="wp-block-paragraph">There are various tricks you can use to keep performance high:</p>
+<ul class="wp-block-list"><li>Use the simplest possible numeric types.</li><li>Apply <a href="https://en.wikipedia.org/wiki/Fixed-point_arithmetic#Representation">fixed point math</a>.</li><li>Pre-calculate as many values as possible.</li><li>Consider that a ‘divide’ operation can be achieved by multiplying by a value’s reciprocal. (E.g. <em>x / y</em> is the same as <em>x * (1 / y)</em>, and <em>(1 / y)</em> might be pre-calculated.)</li><li>Perform some operations (such as reading gyro values) only periodically.  (Made simpler by using my <a href="../arduino-code-timed-events/index.html">Timed Events</a> code!)</li><li>User <a href="https://forum.arduino.cc/index.php?topic=46896.0">faster pin I/O code</a>.</li></ul>
+<p class="wp-block-paragraph">There’s an <a href="https://playground.arduino.cc/Main/ShowInfo/">extremely handy table</a> showing how long various Arduino operations take.  It’s definitely worth keeping at hand!  I’ll include a copy here for reference:</p>
+<pre>Speed test
+----------
+F_CPU = 16000000 Hz
+1/F_CPU = 0.0625 us
+The next tests are runtime compensated for overhead
+Interrupts are still enabled, because millis() is used for timing
+  nop                       : 0.063 us
+  avr gcc I/O               : 0.125 us
+  Arduino digitalRead       : 3.585 us
+  Arduino digitalWrite      : 5.092 us
+  pinMode                   : 4.217 us
+  multiply byte             : 0.632 us
+  divide byte               : 5.412 us
+  add byte                  : 0.569 us
+  multiply integer          : 1.387 us
+  divide integer            : 14.277 us
+  add integer               : 0.883 us
+  multiply long             : 6.100 us
+  divide long               : 38.687 us
+  add long                  : 1.763 us
+  multiply float            : 7.110 us
+  divide float              : 79.962 us
+  add float                 : 9.227 us
+  itoa()                    : 13.397 us
+  ltoa()                    : 126.487 us
+  dtostrf()                 : 78.962 us
+  random()                  : 51.512 us
+  y |= (1&lt;&lt;x)               : 0.569 us
+  bitSet()                  : 0.569 us
+  analogRead()              : 111.987 us
+  analogWrite() PWM         : 11.732 us
+  delay(1)                  : 1006.987 us
+  delay(100)                : 99999.984 us
+  delayMicroseconds(2)      : 0.506 us
+  delayMicroseconds(5)      : 3.587 us
+  delayMicroseconds(100)    : 99.087 us
+-----------
+</pre>
+<p class="wp-block-paragraph">Notice how much longer a ‘divide’ operation takes! Nearly 12x slower for a <code>float</code>!</p>
+</div></article></main></body></html>

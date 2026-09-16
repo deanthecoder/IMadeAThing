@@ -1,6 +1,4 @@
-<!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Making a Game Boy Emulator – Let’s Play Tetris — I Made A Thing</title><meta name="description" content="Dean Edis on building G33kBoy: CPU, graphics, memory and the pitfalls of getting Tetris running."><link rel="stylesheet" href="../../style.css"></head>
-<body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING<span>DEAN EDIS / DEANTHECODER</span></a><a href="https://github.com/deanthecoder/G33kBoy">G33kBoy on GitHub ↗</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">RETRO / DEVELOPMENT NOTES</p><h1>Making a Game Boy Emulator – Let’s Play Tetris</h1><p class="article-date"><time datetime="2025-11-18">18 November 2025</time> · Updated 4 January 2026</p><div class="article-content">
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Making a Game Boy Emulator – Let’s Play Tetris — I Made A Thing</title><meta name="description" content="Writing a Game Boy emulator is an absolute blast — until it suddenly isn’t.Tetris has a reputation for being “easy,” but it still threw me a few…"><link rel="stylesheet" href="../../style.css"></head><body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">RETRO</p><h1>Making a Game Boy Emulator – Let’s Play Tetris</h1><p class="article-date"><time datetime="2025-11-18">2025-11-18</time> · Updated 2026-01-04</p><div class="article-content">
 <p class="wp-block-paragraph">Writing a Game Boy emulator is an absolute blast — until it suddenly isn’t.<br/>Tetris has a reputation for being “easy,” but it still threw me a few proper curveballs.</p>
 <p class="wp-block-paragraph">I have written a <a href="https://github.com/deanthecoder/ZXSpeculator">ZX Spectrum</a> emulator before, which was a good project to start from. It doesn’t need too many chips emulating, and the <a href="https://en.wikipedia.org/wiki/Zilog_Z80">Z80 CPU</a> is fairly straight-forward to implement.</p>
 <p class="wp-block-paragraph">Fancying another challenge, I picked the <a href="https://en.wikipedia.org/wiki/Game_Boy">Game Boy</a>.  It has a CPU partially based on the Z80, but also needs a PPU (graphics chip) and sound chip to emulate.</p>
@@ -8,7 +6,7 @@
 <p class="wp-block-paragraph">That said, I did have a few stumbling blocks.  To save others time, I’ve documented them…</p>
 <p class="wp-block-paragraph">All source code freely available here: <a href="https://github.com/deanthecoder/G33kBoy">https://github.com/deanthecoder/G33kBoy</a></p>
 <p class="wp-block-paragraph"><em>If you want the quick checklist, skip to the TL;DR at the end</em></p>
-<figure class="wp-block-image size-full is-resized"><img alt="Tetris intro screen" class="wp-image-264" decoding="async" loading="lazy" src="../../assets/articles/game-boy-tetris/image-1.png"/></figure>
+<figure class="wp-block-image size-full is-resized"><img alt="Tetris intro screen" class="wp-image-264" decoding="async" loading="lazy" src="../../assets/archive/wp-content/uploads/2025/11/image-1.png"/></figure>
 <hr class="wp-block-separator has-alpha-channel-opacity"/>
 <h2 class="wp-block-heading" id="1--cartridge-rom-must-be-read-only-">1. 💾 Cartridge ROM <em>Must</em> Be Read-Only</h2>
 <h3 class="wp-block-heading" id="aka-tetris-will-cheerfully-eat-its-own-code">(aka: Tetris Will Cheerfully Eat Its Own Code)</h3>
@@ -207,4 +205,4 @@ internal class SerialDevice : IMemDevice
 <li><strong>Acid2 PPU Test:</strong><br/><a href="https://github.com/mattcurrie/gb-test-roms/tree/master/acid2">https://github.com/mattcurrie/gb-test-roms/tree/master/acid2</a></li>
 <li><strong>blargg CPU Tests:</strong><br/><a href="https://github.com/retrio/gb-test-roms">https://github.com/retrio/gb-test-roms</a></li>
 </ul>
-</div></article></main><footer>DEAN EDIS · I MADE A THING</footer></body></html>
+</div></article></main></body></html>

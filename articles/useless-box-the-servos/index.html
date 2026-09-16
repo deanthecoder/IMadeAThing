@@ -1,0 +1,14 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Useless Box – The Servos — I Made A Thing</title><meta name="description" content="Servos Getting a servo to move is a bit more complicated that getting an electric motor to spin, but not much so. Servos are typically limited…"><link rel="stylesheet" href="../../style.css"></head><body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">HARDWARE</p><h1>Useless Box – The Servos</h1><p class="article-date"><time datetime="2018-08-18">2018-08-18</time> · Updated 2018-10-06</p><div class="article-content"><h4>Servos</h4>
+<p>Getting a servo to move is a bit more complicated that getting an electric motor to spin, but not much so.</p>
+<p>Servos are typically limited to being able to rotate 180 degrees, which means it’s not just a simple case of applying a voltage to make it ‘spin’.<br/>
+Instead the Arduino can send a ‘pulsed’ signal to the servo which governs the position.  There are many articles out there describing how to do this, but the Arduino servo library has excellent documentation and clear steps on the basics.</p>
+<p>Thankfully the basics is all I need.</p>
+<p><!--more-->Here’s a video showing my progress after an hour or so of work in the Arduino IDE.  Both servos are powered directly from the Arduino board – I was a bit worried about whether the current draw on the board would be too much, but experimentation showed no problems so I went with it.</p>
+<p>One servo will be used to lift the ‘lid’ of the box, and the other will be attached to the ‘finger’.  For now, just getting the two servos moving independently is enough for me…</p>
+<div><a aria-label="Watch Useless Box – The Servos on YouTube" class="video-preview" href="https://www.youtube.com/watch?v=S_Iynyu5omA" rel="noopener" target="_blank"><img alt="Useless Box – The Servos video preview" draggable="false" loading="lazy" src="../../assets/archive/youtube/S_Iynyu5omA.jpg"/></a></div>
+<p> </p>
+<p>…and a better view of my ‘setup’…</p>
+<p><img alt="" class="size-large wp-image-38 aligncenter" decoding="async" loading="lazy" src="../../assets/archive/wp-content/uploads/2018/08/Photo-18-08-2018-14-57-02-e1538684212902-700x525.jpg"/></p>
+<h4>TIP</h4>
+<p>I found that when the servos were at their maximum/minimum values they would make a ‘whine’ sound, which I could only remove by limiting the extent the Arduino code allowed them to move.  So instead of 0-180 degrees, 1-179 actually worked better for me.</p>
+</div></article></main></body></html>

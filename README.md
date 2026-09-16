@@ -1,32 +1,32 @@
 # I Made A Thing
 
-Dean Edis / DeanTheCoder’s portfolio and development notes. Static HTML, CSS and JavaScript, intended for GitHub Pages. No build step or package installation required.
+Dean Edis / DeanTheCoder’s projects and development notes. Static HTML, CSS and JavaScript intended for GitHub Pages, with no build step.
 
-## Local preview
+## Preview
 
-Run `python3 -m http.server 8080` from this folder, then open http://localhost:8080.
+Run `python3 -m http.server 8080` here and open http://localhost:8080. Use HTTP so the reader can load article pages.
 
-## First content slice
+## Collection
 
-The homepage opens with the cards in the distance and subtle mouse-driven terrain movement and a slow forward floor-grid glide. The header keeps just the site title, a short description, and essential links. The Motion control pauses the glide, and reduced-motion preferences disable it. Category controls sit above the carousel; choosing a category brings its cards forward. The collection grid stays collapsed until “View all projects and notes” is opened. The original “Making a Game Boy Emulator – Let’s Play Tetris” article has a standalone URL at `articles/game-boy-tetris/`, with its backed-up image stored locally. The remaining six entries retain the prototype’s demonstration content and illustrations; they are not finished project descriptions.
+All 33 published posts and the About page were imported from the September 10, 2026 WordPress backup. Original wording, code, headings, dates, links and captions are preserved. Six entries are Featured; other filters are Tools, Retro, Shaders, Hardware and About. Featured selects one second after loading unless the visitor interacts first. The distant scene shows up to eight previews; every article is available through its category and the full collection grid.
 
-`content/game-boy-tetris.json` retains the selected published WordPress article as a migration source. The full backup remains outside this repository. Article prose has been preserved; WordPress presentation markup has been cleaned for the new layout.
+All cards open the same reader. Each article also has a standalone page under `articles/`, and the former WordPress article paths redirect to these pages. `content/url-map.json` records the mapping. YouTube-only posts use locally saved video thumbnails as both their card art and an article preview; selecting the preview opens the original video. The domain itself is not configured or renewed by this project.
 
-## Publishing later
+`content.js` supplies the cards; `content/articles.json` holds the same metadata. Original media and article image variants live under `assets/archive/`. YouTube embeds still need an internet connection. Three unavailable external product images are represented by notes; two unavailable advertising tracking pixels were removed. Details are in `content/import-report.json`. External linked sites and video playback have not been exhaustively verified live.
 
-This is a local Git repository. No GitHub repository or deployment has been created. The files use relative paths and include `.nojekyll` for static GitHub Pages hosting. Publish from the repository root when ready, after replacing the remaining sample content. No custom domain is configured.
+The initial commit preserves the downloaded prototype. Placeholder project cards and invented sample articles have been removed; newer projects such as Browse and G33kShell can be added separately with real content.
 
-## Next steps
+## Repeatable import and verification
 
-- Review this first real article and the homepage direction.
-- Replace sample projects with original writing, screenshots and direct repository links.
-- Import the remaining backed-up articles and map old WordPress paths.
-- Check mobile, keyboard and touch behavior before launch.
+Install `beautifulsoup4` in a Python virtual environment, then run:
 
-The initial Git commit preserves the unmodified downloaded prototype and its original handover notes.
+```
+python scripts/import_backup.py /path/to/imadeathing-backup-2026-09-10.zip
+python scripts/verify_import.py /path/to/imadeathing-backup-2026-09-10.zip
+```
 
-Featured is a curated filter independent of project categories; currently G33kBoy is featured. Set `featured: true` on additional entries to include them. GitHub, X, and Linktree profile icons sit beside the title. The bottom-right Motion toggle controls animation; the floor advances one tile every six seconds.
+The importer updates generated article pages, old-path redirects, metadata and archived assets. It preserves the current presentation and carousel implementation. The verifier compares article text (normalizing whitespace) to the source and checks local HTML references.
 
-Featured selects automatically one second after page load, unless the visitor has already interacted with the carousel or opened an article. Carousel movement uses synchronized position, edge fading and integer stacking order; wrapping cards reach zero opacity before changing sides.
+## Hosting
 
-All collection cards open the shared reading dialog, including imported articles. Imported article HTML is loaded from its standalone page, with asset URLs resolved relative to that page. The reader also links to the standalone article for direct access.
+This is a local Git repository. No GitHub repository or deployment has been created. Relative paths and `.nojekyll` support deployment from the repository root. Review the populated site and check mobile/touch behavior before publishing.

@@ -1,0 +1,102 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Arduino Code – Timed Events — I Made A Thing</title><meta name="description" content="In most of my Arduino projects I find myself in a situation where two things apply: My void loop() function needs to run very quickly. I need to…"><link rel="stylesheet" href="../../style.css"></head><body class="article-page"><header><a class="brand" href="../../index.html">I MADE A THING</a></header><main class="article-shell"><a class="back-link" href="../../index.html">← Back to the collection</a><article><p class="eyebrow">HARDWARE</p><h1>Arduino Code – Timed Events</h1><p class="article-date"><time datetime="2019-04-07">2019-04-07</time> · Updated 2019-04-07</p><div class="article-content">
+<p class="wp-block-paragraph">In most of my Arduino projects I find myself in a situation where two things apply:</p>
+<ol class="wp-block-list"><li>My <code>void loop()</code> function needs to run very quickly.</li><li>I need to output data to the serial window.</li></ol>
+<p class="wp-block-paragraph">Unfortunately outputting to the serial window can add significant performance problems, so to keep the speed up I choose to only output every <em>n</em> milliseconds.</p>
+<p class="wp-block-paragraph">This requires a timer…</p>
+<!--more-->
+<p class="wp-block-paragraph">Typically you record a start time (calling millis()), and then thereafter calculate an elapsed time.  When a defined time threshold is reached, you perform your operation and then re-record the current ‘start’ time.</p>
+<div><table><tr><td><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11</pre></td><td><pre><span>int</span> startTime = 0;
+
+<span>void</span> loop() {
+  <span>if</span> (startTime == 0)
+    startTime = millis();
+
+  <span>if</span> (millis() - startTime &gt; 1000) {
+    <span>// Do something.</span>
+    startTime = millis(); <span>// Reset the timer.</span>
+  }
+}
+</pre></td></tr></table></div>
+<p class="wp-block-paragraph">This code is often required several times in the same loop – Each one for a different timed action.  To make my life simple, I made a class to help:</p>
+<div><table><tr><td><pre> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27</pre></td><td><pre><span>// Call signal() regularly, and it will return true if the timer has elapsed (and will reset).</span>
+<span>class</span> <span>TimedEvent</span>
+{
+public:
+  TimedEvent(<span>unsigned</span> <span>long</span> periodMs) : m_time(millis() * 1000) {
+    setMicros(periodMs * 1000);
+  }
+
+  <span>void</span> setMicros(<span>unsigned</span> <span>long</span> periodMicros) {
+    m_periodMicros = periodMicros;
+    m_time = micros();
+  }
+
+  <span>bool</span> signal() {
+    <span>unsigned</span> <span>long</span> now = micros();
+    <span>if</span> (now - m_time &gt;= m_periodMicros) {
+      m_time = now;
+      <span>return</span> true;
+    }
+
+    <span>return</span> false;
+  }
+
+private:
+  <span>unsigned</span> <span>long</span> m_time;
+  <span>unsigned</span> <span>long</span> m_periodMicros;
+};
+</pre></td></tr></table></div>
+<p class="wp-block-paragraph">(See my <a href="../arduino-coding-custom-code/index.html">earlier article</a> on how to put this code into its own header file, to make it even easier to use in your projects.)</p>
+<p class="wp-block-paragraph">Now the same example can be written in significantly less code:</p>
+<div><table><tr><td><pre>1
+2
+3
+4
+5
+6
+7</pre></td><td><pre>TimedEvent event(1000);
+
+<span>void</span> loop() {
+  <span>if</span> (event.signal()) {
+    <span>// Do something.</span>
+  }
+}
+</pre></td></tr></table></div>
+<p class="wp-block-paragraph">Note: Internally the <code>TimedEvent</code> class uses microseconds, not milliseconds.  If you require more fine-tuned timing (Perhaps you’re sending pulses to a stepper motor), just call <code>setMicros()</code> to set your time.</p>
+</div></article></main></body></html>

@@ -121,3 +121,16 @@ footer { padding-bottom: 80px; }
  transition: border-color .3s, box-shadow .3s;
  transition-delay: 0ms;
 }
+
+.archive-art { display: flex; align-items: center; justify-content: center; }
+.archive-art img { width: 100%; height: 100%; object-fit: contain; }
+.text-preview { padding: 20px; font-size: 13px; color: var(--pink); }
+.text-preview b { display: block; margin-top: 12px; font-size: 23px; color: #eee6f3; }
+.card h2 { font-size: 20px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.card p { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.video-preview { position: relative; display: block; margin: 24px 0; border: 1px solid #ffffff25; border-radius: 10px; overflow: hidden; }
+.video-preview img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+.video-preview::after { content: '▶'; position: absolute; left: 50%; top: 50%; translate: -50% -50%; display: grid; place-items: center; width: 68px; height: 48px; border-radius: 12px; color: white; background: #e62117e8; box-shadow: 0 8px 28px #0009; font-size: 23px; padding-left: 3px; }
+.video-preview:hover { border-color: var(--pink); }
+.article-content { overflow-wrap: anywhere; }
+.article-content table { display: block; overflow-x: auto; max-width: 100%; }
