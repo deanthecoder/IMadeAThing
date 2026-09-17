@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wolfenstein 3D, Rebuilt in C# — I Made A Thing</title>
+<meta name="description" content="Rebuilding Wolfenstein 3D with an authentic software renderer underneath a completely new lighting system.">
+<link rel="stylesheet" href="../../style.css">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">RETRO</p>
+<h1>Wolfenstein 3D, Rebuilt in C#</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>Wolfenstein 3D is a game I grew up playing. I remember the first time I saw it I was amazed at its '3D' environment.<br>Obviously I know now that it's not <em>quite</em> 3D, but at the time it was awesome.</p>
+<p>The aim was not to turn Wolfenstein into a different game. It was to ask what the existing game might look like if its pixels could participate in modern lighting.<br>Some of the comments I have received since putting this in the public domain often suggest I use upscaled graphics, rewrite using Unity, make it truely 3D, etc. All great ideas, but I think those approaches have already been taken. My goal was to make a version of the game a 40-something year old could see and be completely familiar with.</p>
+<p>I have written several raycasters over my many years of software development, but I recently had some spare time on my hands and wanted to try 'revamping' the original game engine. C# is my language of choice these days, so I time-boxed myself to see how far I'd get..</p>
+<p>The levels are grids. The walls are square. Enemies are sprites. A raycaster draws the world one vertical slice at a time. How hard could it be?</p>
+<p>Wolfenshine is my modern C# reimplementation of Wolfenstein 3D. It loads the maps, artwork, music and sounds from a legitimate copy of the original game, but the engine itself is independently written. It can present the game as an authentic 320×200 software-rendered experience—or, at any moment, you can press F2.</p>
+<p>Then the lights come on.</p>
+<figure><img src="../../assets/projects/wolfenshine/renderer-comparison.png" alt="A Wolfenshine room split diagonally between enhanced lighting and the authentic renderer" loading="lazy"><figcaption>The same scene, with the authentic and enhanced renderers side by side.</figcaption></figure>
+<h2>Start with the original rules</h2>
+<p>I did not want to begin by “improving” Wolfenstein. First I needed to understand it.</p>
+<p>That meant loading the original data formats, reconstructing maps, decoding artwork and sprites, and building a framebuffer-based renderer with the familiar 4:3 presentation. Doors had to slide correctly. Pushwalls had to remain secret until discovered. Guards had to see, hear, chase and attack. The HUD, weapon animations, pickups, keys, scoring and intermission screens all had to feel recognisable.</p>
+<p>Thankfully many people have already researched and documented much of this, and in the age of AI-assisted development getting an prototype up and running only took a few days.</p>
+<p>Note: I do use Codex to help explain things, and write chunks of code for me. I have written loggers, utility classes, renderers, shaders many many times over. Using AI to be able to to pull in code from my backlog makes development hugely efficient.</p>
+<p>The project uses the original game data rather than redistributing it. Wolfenshine can use the freely available shareware episode or the full six-episode data from a legitimate installation. The setup screen accepts the original archive or data files and keeps them outside the repository.</p>
+<p>That separation turned out to be a useful design constraint: the engine has to understand the game’s formats cleanly, while copyrighted assets remain owned and supplied by the player.</p>
+<figure><img src="../../assets/projects/wolfenshine/episode-start.png" alt="The opening Wolfenstein 3D room running in Wolfenshine's authentic renderer" loading="lazy"><figcaption>The original presentation is a renderer in its own right, not a filter over the enhanced mode.</figcaption></figure>
+<h2>One game, two renderers</h2>
+<p>The authentic renderer is not merely a nostalgic filter placed over a modern 3D scene. It is a real software-rendered framebuffer built around the original grid world and pixel artwork.</p>
+<p>The enhanced mode sits alongside it rather than replacing it. Both renderers consume the same world, actors and game state. Pressing F2 does not reload the level or translate the player into a second implementation; it simply changes how the current frame is drawn.</p>
+<p>That made the comparison much more interesting. Every enhancement had to respect the original art instead of hiding it:</p>
+<ul>
+<li>Coloured lights spill through rooms and across enemies.</li>
+<li>Muzzle flashes briefly illuminate nearby surfaces.</li>
+<li>Doorways cast shafts down into darker spaces.</li>
+<li>Treasure, keys and weapons can glow without replacing their sprites.</li>
+<li>Fog and distance shading add depth to the flat grid.</li>
+<li>Puddles and wells project animated caustics onto the ceiling.</li>
+<li>Bloom, ambient occlusion and generated wall relief add atmosphere around the pixels.</li>
+</ul>
+<figure><img src="../../assets/projects/wolfenshine/enhanced-exit-room-god-rays.png" alt="God rays lighting a Wolfenshine exit room" loading="lazy"><figcaption>Light shafts add depth while the original pixel art remains unmistakable.</figcaption></figure>
+<figure><img src="../../assets/projects/wolfenshine/enhanced-treasure-lighting.png" alt="Treasure casting coloured light in Wolfenshine" loading="lazy"><figcaption>Treasure and pickups illuminate the world without replacing their sprites.</figcaption></figure>
+<figure><img src="../../assets/projects/wolfenshine/enhanced-water-caustics.png" alt="Animated water caustics projected onto a Wolfenshine ceiling" loading="lazy"><figcaption>Animated caustics from a well play across the ceiling.</figcaption></figure>
+<h2>A luminous path through the castle</h2>
+<p>OK, so I <em>did</em> deviate from the original game <em>slightly</em>...</p>
+<p>Wolfenstein’s secret walls are part of its charm, but returning to a level after thirty years can make the route to the lift slightly less obvious than memory suggests.</p>
+<p>Holding Tab in enhanced mode draws a glowing path directly onto the floor. It is not a line through walls. The route follows the same gameplay rules as the player: it can use openable doors, respects locks, leads to reachable keys when necessary, and only incorporates a secret passage after its pushwall has been discovered.</p>
+<p>The trail is rendered as part of the world, so walls and doors naturally hide the sections beyond them. Three chevrons flow across each tile and bend around corners. Releasing Tab fades the complete captured route; pressing it again recalculates using the latest keys, doors and secrets.</p>
+<p>It is a modern convenience, but one that still belongs inside the raycast world.</p>
+<figure><img src="../../assets/projects/wolfenshine/enhanced-navigation-guide.png" alt="A luminous navigation trail bending through a Wolfenshine level" loading="lazy"><figcaption>The route follows the same doors, keys and discovered secrets as the player.</figcaption></figure>
+<p>Explore the source and current releases on <a href="https://github.com/deanthecoder/Wolfenshine" rel="noopener" target="_blank">GitHub</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

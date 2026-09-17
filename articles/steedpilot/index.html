@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Building a Motorcycle Sat-Nav with an iPhone and an ESP32 — I Made A Thing</title>
+<meta name="description" content="Splitting navigation between an iPhone and a compact circular ESP32 display designed for quick glances on a motorcycle.">
+<link rel="stylesheet" href="../../style.css?v=20260917-3">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">BUILDS</p>
+<h1>Building a Motorcycle Sat-Nav with an iPhone and an ESP32</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>At 48 I decided to have a bit of a mid-life crisis and get myself a motorbike. Just a 125cc, but my Zontes C2 is a great bike and I'm enjoying being nervous and excited in nearly equal measures when I ride it.</p>
+<p>I did miss having a sat nav though. You can certainly buy them, but I thought in this day of AI I'd try my hand at making my own. I enjoy making things and I have a 3D printer, and I'd leave Codex to do much of the iOS app side of things.</p>
+<p>I wanted a device that is compact, bright, immediately readable and quiet until it has something important to say. A rider should be able to glance down, understand the next instruction and look back at the road (especially when they've only been riding a couple of months!).</p>
+<p>SteedPilot is my attempt to build that device from an iPhone and an ESP32-S3 with a 360×360 circular screen.</p>
+<p>The iPhone does the difficult thinking. The ESP32 concentrates on being a dependable display.</p>
+<figure><img src="../../assets/projects/steedpilot/steedpilot-hardware.png" alt="The SteedPilot hardware showing a roundabout instruction beside the iPhone app" loading="lazy"><figcaption>The working circular ESP32 display beside the SteedPilot iPhone app.</figcaption></figure>
+<h2>Two computers, one deliberately small job</h2>
+<p>The architecture is split in two.</p>
+<p>The iPhone handles route planning, GPS, MapKit navigation state, speed limits, heading and route recalculation. It already has a good location system, a network connection and plenty of processing power.</p>
+<p>The ESP32 receives a compact navigation state over Bluetooth Low Energy and renders it. It also owns local concerns such as touch, display brightness, battery state, movement detection and eventually wake/sleep behaviour.</p>
+<p>This keeps the embedded side intentionally boring—in the complimentary engineering sense. It should not need to understand road networks or maintain a full map. If the phone says the next manoeuvre is the third exit at a roundabout in 178 metres, the device’s job is to present that clearly and reliably.</p>
+<figure><pre><code>iPhone                              ESP32
+MapKit · GPS · route planning  ──BLE──▶  UI · sensors · power</code></pre><figcaption>The phone owns navigation; the embedded device remains a focused display.</figcaption></figure>
+<h2>Designing for a glance</h2>
+<p>A circular display invites circular UI, but it is very easy to fill every edge with attractive but unreadable gauges.</p>
+<p>SteedPilot uses the centre for the next manoeuvre and distance, leaving the edge for secondary information:</p>
+<ul>
+<li>A red warning ring can strengthen as the rider moves above the current speed limit.</li>
+<li>A route-progress arc grows as the journey advances.</li>
+<li>A manoeuvre-progress arc shrinks as the next instruction approaches.</li>
+<li>Roundabouts can show the target exit strongly while muting the others.</li>
+</ul>
+<p>Long road sections need special treatment too. Showing “turn left in 18 miles” for half an hour is not especially useful, so the display can move into a “continue on this road” state until the next manoeuvre becomes relevant.</p>
+<p>The end goal is not maximum information density. It is minimum interpretation time.</p>
+<div class="direction-gallery">
+<figure><img src="../../assets/projects/steedpilot/directions/TurnLeft.png" alt="SteedPilot left-turn direction arrow" loading="lazy"><figcaption>Turn left</figcaption></figure>
+<figure><img src="../../assets/projects/steedpilot/directions/Roundabout.png" alt="SteedPilot roundabout direction arrow" loading="lazy"><figcaption>Roundabout</figcaption></figure>
+<figure><img src="../../assets/projects/steedpilot/directions/Continue.png" alt="SteedPilot continue-straight direction arrow" loading="lazy"><figcaption>Continue</figcaption></figure>
+</div>
+<h2>A protocol made from fixtures</h2>
+<p>The phone and device communicate using small JSON messages over BLE. A complete <code>state</code> message replaces the navigation state, an <code>update</code> patches only changed fields, and a <code>heartbeat</code> confirms that the app is still present.</p>
+<pre><code>{
+  "v": 1,
+  "type": "state",
+  "mode": "navigation",
+  "maneuver": "roundabout",
+  "distanceToManeuverMeters": 178
+}</code></pre>
+<p>Messages are chunked for BLE and terminated with a newline. The ESP32 buffers the chunks, parses the completed object and renders the result.</p>
+<p>Keeping example messages as JSON fixtures gave the project a useful source of truth. The same fixture can drive the desktop simulator, regression tests and real hardware. A roundabout does not need to be rediscovered by riding repeatedly around Cambridge; it can be replayed at a desk until the UI is right.</p>
+<h2>What's next?</h2>
+<p>For now, SteedPilot has reached the important milestone: I'm able to plan a decent-length ride and get accurate (enough) direction feedback to help me get where I need to go.</p>
+<p>The battery life is fairly poor, as I have to charge it once every day I want to use it. In time I'll add a larger capacity LIPO battery, and I'd like to be able to put the device in super-low-power mode - Something I think I can only do with a bit of re-wiring.</p>
+<p>For now, I'm happy with the result!</p>
+<p>Follow the build on <a href="https://github.com/deanthecoder/SteedPilot" rel="noopener" target="_blank">GitHub</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

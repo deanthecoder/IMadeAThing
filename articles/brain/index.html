@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>I'm old and need a 'memory' upgrade — I Made A Thing</title>
+<meta name="description" content="A command-line memory store built from readable local data, deterministic metadata, private sync and a deliberately thin AI integration.">
+<link rel="stylesheet" href="../../style.css?v=20260917-4">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">TOOLS</p>
+<h1>I'm old and need a 'memory' upgrade</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>I often remember that a decision was made without remembering where it was made. Or at least, I <em>think</em> I remember...</p>
+<p>It might be in a chat, an issue, a notebook, a source-code comment or a message from somebody whose name I do at least remember. Finding it again takes longer than recording it would have—provided recording it does not require choosing the perfect document and organising it first.</p>
+<p>Brain is a small command-line memory store designed around that problem. It's quick and easy to use, works across machines, can remember files, people, hashtags - Perfect for day to day use.</p>
+<pre><code>brain "@Bob says 16-bit support is not needed for the new imaging feature"
+brain recall "16 bit"</code></pre>
+<p>Capture should be nearly effortless. Storage should remain readable and portable. As it comes with an optional Codex skill, AI can help me use the memories, which makes developing new coding ideas quicker and simpler.</p>
+<figure><img src="../../assets/projects/brain/brain-overview.jpg" alt="Brain remembers through the command line or Codex, synchronises privately and recalls on macOS and Windows" loading="eager"><figcaption>Remember from a terminal or Codex, synchronise privately, then recall from either.</figcaption></figure>
+<h2>The command line is the capture interface</h2>
+<p>Opening an application creates just enough friction to defer writing something down.</p>
+<p>Brain accepts a thought directly as its default command. There is no mandatory title, folder or form. Clear signals inside the text become metadata:</p>
+<ul>
+<li><code>@Bob</code> identifies a person.</li>
+<li><code>#todo</code> marks a task.</li>
+<li><code>#tag</code> supplies a category.</li>
+<li>URLs and email addresses are recognised.</li>
+<li><code>@file:path</code> copies and attaches a file.</li>
+</ul>
+<p>The parsing is deterministic. Brain does not send the sentence to a model and ask what it probably means. Ambiguous text remains text.</p>
+<p>That boundary makes capture predictable and keeps the stored entry faithful to what I actually wrote.</p>
+<h2>Plain data before clever retrieval</h2>
+<p>Memories are stored as readable JSON, while attached files are kept as content-addressed binary blobs. The data remains inspectable and exportable without Brain or an AI service.</p>
+<p>Entries are effectively immutable. Replacing a memory creates a new entry and records the old one as forgotten. Those tombstones also synchronise, preventing another computer from resurrecting deleted information during its next merge.</p>
+<p>Attachments are deduplicated by hash. If several memories reference the same file, it is stored once. When the last reference disappears, the blob is retained for a grace period before pruning rather than being destroyed immediately.</p>
+<p>These are not exciting features in a screenshot, but they are what make a memory tool trustworthy after the novelty wears off.</p>
+<figure><pre><code>memory.json ──references──▶ attachment hash ──▶ deduplicated blob
+     │
+     └──replaced/forgotten──▶ synchronised tombstone</code></pre><figcaption>Readable entries point to deduplicated attachments; deletions travel as tombstones.</figcaption></figure>
+<h2>Private cross-machine sync</h2>
+<p>Brain can connect to Google Drive on each computer, but it uses Drive’s hidden application-data area rather than placing a folder of internal files among the user’s documents.</p>
+<p>The CLI periodically pulls changes before reads and pushes after capture. An offline switch disables both the version check and synchronisation when a command should remain local.</p>
+<h2>Codex is a client, not the database</h2>
+<p>Brain includes a Codex skill that recognises requests such as:</p>
+<ul>
+<li>“Remember this in my brain.”</li>
+<li>“Ask my brain what we decided about iOS.”</li>
+<li>“Check my brain for anything Bob said about installers.”</li>
+<li>“Review my brain and suggest duplicates.”</li>
+</ul>
+<p>The skill calls the same CLI a person can use. It does not edit Brain’s storage directly. Structured JSON output gives the integration a stable interface, while the command owns validation, search, replacement and deletion.</p>
+<p>This is an important separation. Codex makes the system conversational, but it does not become the source of truth. The memory remains useful from an ordinary terminal, and every mutating operation still passes through the same application rules.</p>
+<p>The project began as a way to remember small facts, ideas and 'todo' items. I'm glad I have it!</p>
+<p>Brain is available on <a href="https://github.com/deanthecoder/Brain" rel="noopener" target="_blank">GitHub</a>, including its command-line app and Codex skill.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Recreating Spectrum BASIC Without Emulating a Spectrum — I Made A Thing</title>
+<meta name="description" content="Rebuilding the immediate, colourful experience of programming a ZX Spectrum while keeping the conveniences of a modern editor.">
+<link rel="stylesheet" href="../../style.css?v=20260917-4">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">RETRO</p>
+<h1>Recreating Spectrum BASIC Without Emulating a Spectrum</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>My parents bought my sister a ZX Spectrum 48K when I was about 5, and I've been coding ever since.<br>The ZX Spectrum did not ask you to create a project, choose a template or install seventeen packages.</p>
+<p>It switched on and waited.</p>
+<p>Unlike other computers at the time (BBC Micro, Commodore 64, ...) which had more of a 'typewriter'-style of input, and due to some quite cunning efficiency savings, the Spectrum had a novel way of entering BASIC code - Each key would translate to (at least one) command.<br>Once you got into the swing of things, entering code was a (relatively) fast and efficient process.</p>
+<p>ZXBasic is my attempt to recreate that experience as a modern cross-platform application. It is not a complete Spectrum emulator (I've already written one of those: <a href="https://github.com/deanthecoder/ZXSpeculator" rel="noopener" target="_blank">github.com/deanthecoder/zxspeculator</a>). It is a BASIC interpreter and editor built around the behaviour that made the original machine such an inviting place to experiment. Except I <em>did</em> make it have typewriter-esque input, to make life easier on a modern keyboard.</p>
+<p>I also added a couple of new commands, as I mention below.</p>
+<div class="article-image-pair">
+<figure><img src="../../assets/projects/zxbasic/UnionJack.png" alt="A Union Jack drawn by a ZXBasic program" loading="lazy"><figcaption>Union Jack, built from drawing commands and attributes.</figcaption></figure>
+<figure><img src="../../assets/projects/zxbasic/HumanShader.png" alt="Human Shader scene calculated and rendered in ZXBasic" loading="lazy"><figcaption>Human Shader, calculated completely in BASIC.</figcaption></figure>
+</div>
+<h2>The prompt is part of the language</h2>
+<p>Implementing BASIC statements is only half of the job. Spectrum BASIC also has a distinctive conversation with the user.</p>
+<p>Program lines appear as a listing. Entering a numbered line inserts or replaces it. Entering a bare command executes it immediately. Clicking a listed line should bring it back for editing. A running program can be interrupted and later continued. Reports such as <code>0 OK</code> belong in the right place, with the cursor ready for whatever comes next.</p>
+<p>These details are easy to dismiss as interface decoration, but together they determine whether the application feels like BASIC or merely parses BASIC syntax.</p>
+<p>I also reused a lot of code from my <a href="https://github.com/deanthecoder/ZXSpeculator" rel="noopener" target="_blank">ZX Speculator</a> project, so the CRT-effect screen and some of the sound support could be implemented quickly.</p>
+<figure><img src="../../assets/projects/zxbasic/ZXBasic.png" alt="A BASIC program listing in the ZXBasic application" loading="lazy"><figcaption>The listing, cursor and report are part of the experience—not decoration around it.</figcaption></figure>
+<h2>A 256×192 world of attributes</h2>
+<p>The Spectrum screen contains 256×192 pixels, but its colour is organised in character cells. Each 8×8 cell shares ink, paper, brightness and flash attributes. That limitation created the famous colour clash—and a great deal of the machine’s visual character, which I chose to keep in this project.</p>
+<p>Drawing commands affect pixels while attributes determine how those pixels appear. <code>PLOT</code>, <code>DRAW</code>, <code>CIRCLE</code>, <code>INK</code>, <code>PAPER</code>, <code>BRIGHT</code>, <code>FLASH</code> and custom characters therefore need to interact in recognisably Spectrum-like ways.<br>The goal is not to reproduce every hardware quirk for its own sake. It is to preserve the constraints that shape the programs people write.</p>
+<h2>Drawing should happen while you watch</h2>
+<p>On the original machine, graphics appeared progressively because BASIC was doing the work in front of you. A complex drawing was not a final bitmap; it was a performance.</p>
+<p>ZXBasic supports Spectrum-like execution speed, a faster mode and an unlimited mode. At normal speed, <code>PLOT</code>, <code>DRAW</code> and <code>CIRCLE</code> visibly build the image. Unlimited mode is there for programs such as Human Shader, where watching every individual operation would require considerably more tea than most people have available.</p>
+<p>Changing speed while a program runs makes the difference especially clear. The semantics stay the same; only the waiting changes.</p>
+<p>To get the timing values I ran various graphics-based BASIC code on ZX Emulator (which does a much more accurate job of emulating 'real' machine speed), then calculated the delays needed to reproduce that in ZXBasic.</p>
+<h2>Modern conveniences, carefully added</h2>
+<p>Authenticity is useful until it becomes ceremony.</p>
+<p>ZXBasic accepts normal keyboard input, pasted listings and drag-and-drop files. It can open and save <code>.bas</code> programs and import BASIC from 48K <code>.sna</code> snapshots. Listings can be scrolled and clicked. Screenshots can be saved directly. Code can be <code>RENUM</code>bered.</p>
+<p>Those features are deliberately outside the emulated experience. They make it easier to create and preserve programs without changing what those programs mean.</p>
+<p>This balance matters. I wanted the machine’s constraints in the language and display, not in the file picker.</p>
+<h2>Programs are the real test suite</h2>
+<p>Small unit tests are useful for individual statements, but example programs expose the interactions between them.</p>
+<ul>
+<li><strong>Union Jack</strong> combines drawing commands and attributes.</li>
+<li><strong>Human Shader</strong> calculates a complete scene in BASIC.</li>
+<li><strong>Mouse Paint</strong> exercises pointer input, normal and bright inks, erasing and flood fill.</li>
+<li><strong>3D Spinning Cube</strong> combines arrays, trigonometry and line drawing.</li>
+<li><strong>ThunderCats</strong> depends on carefully joined paths and closed regions.</li>
+</ul>
+<p>Each example began as a demonstration and then became a regression test in disguise. If a drawing develops a one-pixel gap, a fill escapes. If timing is wrong, animation changes character. If listing behaviour loses the current viewport, editing becomes annoying immediately.</p>
+<h2>Why an interpreter rather than another emulator?</h2>
+<p>I already have a full Spectrum emulator. ZXBasic explores a different question.</p>
+<p>An emulator preserves a machine. An interpreter can preserve the act of programming it while making that act easier to share, test and extend. The screen still has colour clash. The language still encourages tiny loops and inventive shortcuts. But the surrounding application can behave like a good modern desktop tool.</p>
+<p>That makes ZXBasic useful both as nostalgia and as a small creative environment. You can paste five lines, alter a number and immediately see what changed.</p>
+<p>Which is more or less how the obsession started the first time around.</p>
+<p>Download it or browse the source on <a href="https://github.com/deanthecoder/ZXBasic" rel="noopener" target="_blank">GitHub</a>.<br>See my ZX Spectrum emulator <a href="../zx-speculator-a-cross-platform-zx-spectrum-emulator/index.html">here</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

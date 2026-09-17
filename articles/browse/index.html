@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why I Built Finder’s Column View for Windows — I Made A Thing</title>
+<meta name="description" content="Building a fast cross-platform column-based file manager.">
+<link rel="stylesheet" href="../../style.css?v=20260917-4">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">TOOLS</p>
+<h1>Why I Built Finder’s Column View for Windows</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>I am a professional software developer that for many years has been equally at home on both Mac and Windows. Nearly. After all this time, I still prefer the Mac and miss not having its column-based file browser when I'm on Windows.</p>
+<p>In Finder’s column view each selected folder opens the next column to its right, leaving the surrounding hierarchy visible. Moving through a deep tree feels less like repeatedly opening pages and more like pointing at the branch you want.</p>
+<p>Browse brings that model to Windows and macOS in a focused cross-platform file manager built with Avalonia.<br>To be honest I <em>still</em> use Finder on the Mac, but having Mac support for Browse was much more convenient given 95% of the app was written on that OS. Plus <a href="https://avaloniaui.net/" rel="noopener" target="_blank">Avalonia</a> makes writing cross-platform C# apps pretty effortless.</p>
+<figure><img src="../../assets/projects/browse/browse-columns.png" alt="Browse showing Finder-style columns and an image preview" loading="eager"><figcaption>The folder hierarchy remains visible while the selected file is previewed on the right.</figcaption></figure>
+<h2>Keep the path visible</h2>
+<p>Each column represents one directory. Selecting a folder creates or replaces the column to its right. The active path therefore exists as visible content rather than only as text in an address bar.</p>
+<p>This changes keyboard navigation too. Up and down move within a directory; right enters the selected folder; left returns to the parent while preserving context. Typing jumps to matching names or file extensions. A filter narrows the active column without affecting the others.</p>
+<p>Favorites and drives remain in the sidebar, while a “Go to” command accepts normal paths, UNC locations and aliases such as <code>home</code>, <code>downloads</code>, <code>temp</code> and <code>localappdata</code>.</p>
+<p>The design is intentionally compact, fast, and easy to use.</p>
+<h2>Preview enough, then stop</h2>
+<p>A preview pane can quietly turn a fast file manager into a slow document viewer.</p>
+<p>Browse supports images, video thumbnails, PDFs, text, Markdown, HTML, JSON, XML, source code, ZIP contents, executable metadata and a conventional hex/ASCII view for unknown binary files. The rule is that preview work must remain bounded.</p>
+<p>Large inputs are sampled rather than swallowed whole. Expensive work is cancelled when the selection changes. Large text and hex views use virtualised editors. Folder sizes are calculated only when requested. Image and video processing has explicit limits.</p>
+<p>This matters because users navigate faster than previews can finish. If selecting five files launches five pieces of work that all run to completion, the application feels worse precisely when somebody uses it quickly.</p>
+<figure><img src="../../assets/projects/browse/code-preview.png" alt="Browse previewing a ZX Spectrum BASIC source file with syntax colouring" loading="lazy"><figcaption>A source-file preview gives enough context without opening another application.</figcaption></figure>
+<h2>File management, not just file viewing</h2>
+<p>Browse supports multi-selection, copy, cut, paste, rename, drag/drop and recycle-bin deletion. It can create and expand ZIP archives, open a terminal at the current location, calculate hashes and copy command-line-ready paths.</p>
+<p>Longer operations report activity on the relevant row and in the status area rather than freezing the window. Multiple Browse windows keep independent locations and state.</p>
+<p>These features are not unusual individually. The challenge is fitting them into a column model without allowing operations in one part of the hierarchy to leave the other columns stale.</p>
+<h2>A familiar idea in a new place</h2>
+<p>Browse is not trying to replace every feature of Explorer or Finder. It exists because one particular navigation model fits the way I move through source trees and collections of files.</p>
+<p>Browse the source and current releases on <a href="https://github.com/deanthecoder/Browse" rel="noopener" target="_blank">GitHub</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>How I Squeezed 6,572 Frames of Bad Apple into a 988 KB Screensaver — I Made A Thing</title>
+<meta name="description" content="The unexpectedly effective combination of lower resolution, rotation, continuous run-length encoding and LZ4.">
+<link rel="stylesheet" href="../../style.css?v=20260917-4">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">TOOLS</p>
+<h1>How I Squeezed 6,572 Frames of Bad Apple into a 988 KB Screensaver</h1>
+<p class="article-date"><time datetime="2026-09-17">2026-09-17</time></p>
+<div class="article-content">
+<p>G33kShell contains a growing collection of screensavers: fire, plasma, AI Snake, ASCII Asteroids, a tiny aquarium and several effects that were probably more sensible uses of my time.</p>
+<p>Then I added Bad Apple.</p>
+<p>The source animation arrived as 6,572 JPEG images at 480×360 and 30 frames per second. Shipping those files with a terminal screensaver would have been gloriously inefficient. The target display was monochrome and deliberately low-resolution, so there had to be a much smaller representation.</p>
+<p>The final asset is 987,617 bytes.</p>
+<p>The most useful optimisation was not an elaborate video codec. It was rotating the frames.</p>
+<figure><img src="../../assets/projects/g33kshell-bad-apple/bad-apple-g33kshell.jpg" alt="Bad Apple playing on the amber CRT display inside G33kShell" loading="eager"><figcaption>Bad Apple playing inside G33kShell’s amber CRT display.</figcaption></figure>
+<h2>Throw away what the screen cannot show</h2>
+<p>The G33kShell pixel surface does not need 480×360 greyscale frames. I reduced each image to 128×120, converted it to one bit per pixel and sampled the animation at 24 fps.</p>
+<p>That produced 5,258 monochrome frames. Packed naively at one bit per pixel, they would occupy roughly 9.6 MiB:</p>
+<pre><code>128 × 120 pixels × 5,258 frames ÷ 8 ≈ 9.6 MiB</code></pre>
+<p>Already much better than thousands of JPEGs, but still rather large for a novelty embedded inside a desktop shell.</p>
+<h2>Alternating runs</h2>
+<p>A monochrome frame is a sequence of black and white pixels. Store the initial colour, then record how long it continues before toggling.</p>
+<p>In my format, run bytes from <code>1</code> to <code>255</code> draw that many pixels and switch colour. A zero byte extends the current colour by another 255 pixels without switching. Long areas of black or white therefore become a short sequence of bytes.</p>
+<p>The run stream continues across frame boundaries. There is no fresh header or colour reset for each frame; the decoder simply knows that every 15,360 pixels complete another 128×120 image.</p>
+<p>That detail saves a little framing overhead, but more importantly gives the final compressor one continuous stream to work with.</p>
+<figure><pre><code>1-bit pixels → alternating run bytes → frame boundaries from pixel count → LZ4</code></pre><figcaption>The format is one continuous stream; frame boundaries are inferred rather than stored.</figcaption></figure>
+<h2>Rotate first, compress second</h2>
+<p>Run-length encoding is extremely sensitive to traversal direction.</p>
+<p>Read a silhouette row by row and an edge may create many short black/white changes. Read the same image down columns and large regions may remain the same colour for much longer—or vice versa.</p>
+<p>For Bad Apple, rotating every frame by 270 degrees before encoding produced substantially fewer runs. Playback rotates the pixels back while decoding into the screen buffer.</p>
+<p>It sounds like a visual operation, but here rotation is really a data-layout optimisation. Nothing about the displayed animation changes. The serial order of its pixels becomes friendlier to the compressor.</p>
+<p>The continuous rotated RLE stream is 1,358,933 bytes. Passing that through the existing LZ4 helper reduces it to 987,617 bytes.</p>
+<table>
+<thead><tr><th>Stage</th><th>Size</th></tr></thead>
+<tbody>
+<tr><td>Raw 128×120, 1bpp, 24 fps</td><td>~9.6 MiB</td></tr>
+<tr><td>Rotated continuous RLE</td><td>1,358,933 bytes</td></tr>
+<tr><td>LZ4-packed asset</td><td>987,617 bytes</td></tr>
+</tbody>
+</table>
+<h2>Cleverer ideas that lost</h2>
+<p>I tried several formats that sounded more sophisticated:</p>
+<ul>
+<li>Dictionaries of repeated rows.</li>
+<li>References to duplicate frames.</li>
+<li>Cropped bounds around changed regions.</li>
+<li>XOR deltas against the previous frame.</li>
+<li>Bit-packed run tokens.</li>
+<li>Reusing previous rows.</li>
+<li>Wider 16-bit run lengths.</li>
+</ul>
+<p>They either made the format more complicated for very little gain or produced data that compressed less effectively afterward.</p>
+<h2>Playback stays simple</h2>
+<p>The decoder needs only a current colour, a remaining run length and a pixel position. It expands enough pixels to fill the next frame, rotates their destination coordinates and hands the completed buffer to the screensaver.</p>
+<p>There is no collection of thousands of files, no general-purpose video decoder and no temporary frame extraction. The whole animation is one application asset with a tiny purpose-built decoder.</p>
+<p>That matters in G33kShell because a screensaver should start promptly, finish cleanly and hand control back without leaving a heavyweight playback system behind.</p>
+<h2>The useful lesson</h2>
+<p>The final result came from three blunt transformations:</p>
+<ol>
+<li>Remove resolution and frame rate the target cannot use.</li>
+<li>Reorder the remaining data so simple runs become longer.</li>
+<li>Let a conventional compressor exploit the resulting byte patterns.</li>
+</ol>
+<p>None is especially clever alone. Together they turned a directory of 6,572 images into a sub-megabyte asset.</p>
+<p>All so that a fake retro terminal can play a monochrome music video when nobody is typing into it.</p>
+<p>Entirely reasonable.</p>
+<p>Explore G33kShell and its many other screensavers on <a href="https://github.com/deanthecoder/G33kShell" rel="noopener" target="_blank">GitHub</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>
