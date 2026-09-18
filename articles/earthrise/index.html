@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Standing on the Moon in VR — I Made A Thing</title>
+<meta name="description" content="Building a Meta Quest experience around lunar scale, a moving sky, Earth on the horizon and a surprisingly throwable collection of moon rocks.">
+<link rel="stylesheet" href="../../style.css?v=20260917-14">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">BUILDS</p>
+<h1>Standing on the Moon in VR</h1>
+<p class="article-date"><time datetime="2026-09-18">2026-09-18</time></p>
+<div class="article-content">
+<p>I have always loved the view of Earth from the Moon. It is a familiar image, but it is difficult to appreciate the scale of it on a flat screen: a small, colourful world hanging in a completely black sky above an enormous empty landscape.</p>
+<p>Virtual reality seemed like the right way to experience it. I had just bought a <a href="https://en.wikipedia.org/wiki/Meta_Quest_3" rel="noopener" target="_blank">Meta Quest 3</a> and wanted a 'project' to develop for it, so figured a Moon scene would be the way to go.</p>
+<p>Earthrise puts you on the lunar surface. There is no score to chase and no carefully signposted route. The point is simply to stand there, look across the terrain, walk around the Lunar Module and watch the sky slowly change.</p>
+<p>From a development point of view this is a great starting project. A slowly moving scene (so less chance of nausea whilst developing it!), it's cool, and shouldn't be too taxing for the hardware.</p>
+<figure><img src="../../assets/projects/earthrise/earthrise.png" alt="Earth hanging above the lunar horizon" loading="eager"><figcaption>Earth hanging above the lunar horizon.</figcaption></figure>
+<h2>Making an empty landscape interesting</h2>
+<p>The Moon is mostly rock, dust and distance, so the landscape cannot rely on trees, buildings or weather to give it detail. It has to work through shape, light and scale.</p>
+<p>The terrain uses a large height field with a detailed lunar surface texture. From ground level, the low ridges hide and reveal parts of the horizon as you move. The lack of an atmosphere means there is no fog to soften distant geometry, so draw distance, texture repetition and terrain detail all become much more obvious than they would in an ordinary outdoor scene.</p>
+<p>I reduced the terrain complexity enough for the Quest to render it comfortably, while retaining the broad undulations that make the landscape feel much larger than the patch of ground actually being simulated.</p>
+<p>You would not believe how long I have spent just walking around my living room/moon, staring at the rocks on the ground. Even my family got bored of laughing at me after a while...</p>
+<figure><img src="../../assets/projects/earthrise/lunar-terrain.png" alt="The lunar terrain beneath a dense field of stars" loading="lazy"><figcaption>The terrain, the stars, and rather a lot of time spent staring at rocks.</figcaption></figure>
+<h2>A sky that behaves like part of the world</h2>
+<p>The background is not completely static. The star field and Milky Way rotate slowly, while the Sun, Earth and directional lighting move together.</p>
+<p>Earth is kept at a fixed angular offset from the Sun. Both objects remain a constant distance from the player, which makes them behave like genuinely distant celestial objects rather than nearby models that noticeably grow and shrink as you walk around.</p>
+<p>As the Sun falls towards the horizon, the main light fades smoothly. The landscape becomes properly dark instead of merely changing colour, which also gives the controller-mounted torch a reason to exist. Squeezing the index trigger gradually brings up the light rather than switching it abruptly on and off.</p>
+<p>Earth has a separate cloud layer rotating at half the speed of the planet beneath it. It is a tiny detail at that distance, but it helps stop Earth feeling like a photograph pasted onto a sphere.</p>
+<h2>A Lunar Module for scale</h2>
+<p>The Lunar Module gives the scene a recognisable focal point and, more importantly, a sense of human scale. Against photographs it looks compact; standing beside it in VR makes the spindly legs, ladder and elevated cabin feel quite different.</p>
+<p>It also makes navigation less abstract. The surrounding terrain is deliberately sparse, so the lander becomes home base: something you can walk away from, look back towards and use to judge how far you have travelled.</p>
+<p>I tried to scale it accurately using NASA-approved dimensions. It's really something to 'walk' up to it and see it towering above you!</p>
+<figure><img src="../../assets/projects/earthrise/lunar-module.png" alt="The Lunar Module standing on the surface" loading="lazy"><figcaption>The Lunar Module gives the empty landscape a very human sense of scale.</figcaption></figure>
+<h2>Of course the rocks are throwable</h2>
+<p>An entirely static lunar scene felt wrong once hand controllers were involved, so I scattered rocks across the terrain. Their positions, rotations and sizes are generated from a fixed random seed, giving the landscape a natural-looking distribution while remaining repeatable between runs.</p>
+<p>Each rock begins frozen in place. Grabbing one enables its rigid-body physics, and releasing it lets it continue under gravity. This avoids finding that half the scenery has rolled away before the experience has even finished loading, while still allowing the important scientific activity of throwing moon rocks at things. OK - Not exactly realistic, but fun!</p>
+<h2>A place rather than a game</h2>
+<p>Earthrise never grew into a conventional game, and I do not think it needed to. It was an experiment in atmosphere: combining landscape, lighting, sound and physical scale to make a place that is pleasant to inhabit for a while.</p>
+<p>The final result is quiet, slightly eerie and surprisingly effective. Looking back at Earth from a dark lunar surface remains one of those simple VR moments that works because you are not merely viewing the scene—you are standing inside it.</p>
+<p>The source project is kept private because it contains third-party Unity assets that cannot be redistributed as raw files.</p>
+</div>
+</article>
+</main>
+</body>
+</html>

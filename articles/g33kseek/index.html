@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Why I Built a Spotlight-Style Launcher for Windows — I Made A Thing</title>
+<meta name="description" content="A fast keyboard-first launcher for apps, files, commands and quick calculations, built with C# and Avalonia.">
+<link rel="stylesheet" href="../../style.css?v=20260917-14">
+</head>
+<body class="article-page">
+<header><a class="brand" href="../../index.html">I MADE A THING</a></header>
+<main class="article-shell">
+<a class="back-link" href="../../index.html">← Back to the collection</a>
+<article>
+<p class="eyebrow">TOOLS</p>
+<h1>Why I Built a Spotlight-Style Launcher for Windows</h1>
+<p class="article-date"><time datetime="2026-09-18">2026-09-18</time></p>
+<div class="article-content">
+<p>I use both Windows and macOS, and one feature I always miss when moving back to Windows is Spotlight.</p>
+<p>On the Mac it has become muscle memory: press a shortcut, type a few characters, open the thing I want and carry on with what I was doing. Windows has plenty of ways to find applications and files, but none of them felt quite as immediate or behaved exactly the way I wanted.</p>
+<p>So I built my own.</p>
+<p>G33kSeek is a lightweight keyboard launcher written in C# using Avalonia. Its main purpose is simple: press a global shortcut, type a query and get out of the way again.</p>
+<p>It also runs on macOS because I spend a lot of time developing there and Avalonia makes most of the application naturally cross-platform. That is useful, but it is not the reason G33kSeek exists. I primarily wanted a Spotlight-like launcher for Windows.</p>
+<figure><img src="../../assets/projects/g33kseek/g33kseek.png" alt="G33kSeek keyboard launcher" loading="eager"><figcaption>One shortcut opens a focused launcher for applications, files, commands and quick utility queries.</figcaption></figure>
+<h2>One shortcut, then type</h2>
+<p>G33kSeek appears using <code>Ctrl+Alt+Space</code> on Windows or <code>Ctrl+Space</code> on macOS. From there I can search for an installed application, file or folder without choosing a search mode first.</p>
+<p>The results are deliberately keyboard-friendly. The arrow keys move between them, Enter performs the main action and Escape dismisses the window. Files and applications also provide secondary actions for things such as revealing an item in Explorer or Finder and copying its path.</p>
+<p>Direct paths and URLs work too. If I already know where something is, I can paste or type the location rather than waiting for it to appear in an index.</p>
+<h2>A tiny query language</h2>
+<p>Normal text searches applications, files and folders, but a few prefixes make the same input box useful for other small jobs:</p>
+<pre><code>rider
+=sin(pi / 2)
+10mb in bytes
+255 in binary
+:wave
+?&quot;avalonia docs&quot;
+&gt;downloads</code></pre>
+<p>An equals sign performs a calculation. A colon searches for emoji and understands a few familiar emoticons. A question mark displays help or performs a quoted web search. A greater-than sign runs one of G33kSeek's built-in commands.</p>
+<p>Commands can open useful locations such as Downloads, Desktop, AppData and the temporary directory. Others generate a GUID, refresh the search index, open the log or perform system actions.</p>
+<p>These are intentionally small conveniences. None is significant enough to justify opening a separate tool, but together they save a surprising amount of interruption.</p>
+<h2>Search without stopping to search</h2>
+<p>The difficult part of a launcher is not displaying a list. It is producing useful results on every keystroke without making the interface hesitate.</p>
+<p>G33kSeek discovers applications differently on Windows and macOS, then combines those results with a cached file and folder index. The index is built in the background from common user locations rather than walking the file system for every query.</p>
+<p>Queries are routed through focused providers for normal searches, calculations, emoji, commands and help. This keeps each mode small while still presenting everything through one input box.</p>
+<p>I have spent rather more time than expected making the file index behave itself. A large index can consume plenty of memory if every entry stores repeated path data and heavyweight file-system objects. G33kSeek now shares repeated parent paths, stores compact search data and only creates <code>FileInfo</code> or <code>DirectoryInfo</code> objects when an action actually needs one.</p>
+<p>Searches are cancellable because an answer to the previous keystroke is already obsolete. Potentially slow availability checks happen only for shortlisted results, and network paths are treated carefully so an unavailable machine cannot freeze the launcher.</p>
+<p>Most of this work is invisible—which is exactly the point. A launcher that pauses while trying to be helpful quickly stops being useful.</p>
+<h2>The launcher I wanted</h2>
+<p>G33kSeek is not intended to be a replacement shell or a huge automation platform. It is the small window I wanted to be able to summon anywhere on Windows: quick to open, quick to search and easy to extend when I notice another repetitive job.</p>
+<p>Browse the source and current releases on <a href="https://github.com/deanthecoder/G33kSeek" rel="noopener" target="_blank">GitHub</a>.</p>
+</div>
+</article>
+</main>
+</body>
+</html>
